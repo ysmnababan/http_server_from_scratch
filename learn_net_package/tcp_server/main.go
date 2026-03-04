@@ -15,7 +15,9 @@ func main() {
 	defer func() { _ = ln.Close() }()
 
 	for {
+		fmt.Println("waiting for conn...")
 		conn, err := ln.Accept()
+		fmt.Println("accepting new conn...")
 		if err != nil {
 			fmt.Println("accept error:", err)
 			continue
@@ -23,7 +25,6 @@ func main() {
 
 		// go handleConnWithBuffer(conn)
 		go handleConn(conn)
-
 	}
 }
 
@@ -40,8 +41,8 @@ func handleConnWithBuffer(conn net.Conn) {
 	for {
 		_, err := conn.Read(b)
 		if err != nil {
-			fmt.Println("read error:", err)
-			continue
+			fmt.Println("client disconnecting")
+			return
 		}
 
 		_, _ = buf.Write(b)
@@ -61,8 +62,8 @@ func handleConn(conn net.Conn) {
 	for {
 		msg, err := reader.ReadString('\n')
 		if err != nil {
-			fmt.Println("read error:", err)
-			continue
+			fmt.Println("client disconnecting")
+			return
 		}
 
 		fmt.Printf("read message: %s", msg)
