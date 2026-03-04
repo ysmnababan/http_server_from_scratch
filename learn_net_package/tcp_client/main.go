@@ -25,6 +25,7 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
+		// _ = conn.SetDeadline(time.Now().Add(5 * time.Second))
 
 		line, err = bufio.NewReader(conn).ReadString('\n')
 		if err != nil {
