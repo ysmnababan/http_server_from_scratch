@@ -28,4 +28,37 @@ func main() {
 	for _, record := range mx {
 		fmt.Println("MX records for gmail.com:", record)
 	}
+
+	_, addrs, _ := net.LookupSRV("xmppp-server", "tcp", "google.com")
+	fmt.Println("SRV records for xmppp-server.google.com:", addrs)
+
+	ifs, _ := net.Interfaces()
+	for _, iface := range ifs {
+		fmt.Printf("Interface: %s, Flags: %v\n", iface.Name, iface.Flags)
+
+		addrs, _ := iface.Addrs()
+		for _, addr := range addrs {
+			fmt.Printf("  Address: %v\n", addr)
+		}
+	}
+
+	// concurrent TCP server
+	ln, _ := net.Listen("tcp", ":8080")
+	for {
+		conn, _ := ln.Accept()
+
+		go func(c net.Conn) {
+			defer c.Close()
+			b := make([]byte, 1024)
+			for {
+				n, err := c.Read(b)
+				if err != nil {
+					fmt.Println("client disconnected")
+					return
+				}
+
+				c.Write(b[:n])
+			}
+		}(conn)
+	}
 }
