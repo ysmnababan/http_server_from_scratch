@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net"
@@ -36,13 +37,33 @@ func handle(conn net.Conn) {
 		// if you use ` instead of " the \r or \n will be
 		// treated as literal characters, so the response
 		// will not be correctly formatted as an HTTP response.
-		// _, _ = conn.Write([]byte(response))
 
-		// body := "{\"message\": \"New User Created\"}"
+		b := struct {
+			Message string `json:"message"`
+			User    struct {
+				Id        int    `json:"id"`
+				FirstName string `json:"firstName"`
+				LastName  string `json:"lastName"`
+				Email     string `json:"email"`
+			}
+		}{
+			Message: "New User Created",
+			User: struct {
+				Id        int    `json:"id"`
+				FirstName string `json:"firstName"`
+				LastName  string `json:"lastName"`
+				Email     string `json:"email"`
+			}{
+				Id:        10,
+				FirstName: "Test",
+				LastName:  "Name",
+				Email:     "exampleemail",
+			},
+		}
 
-		body := `{
-		"message": "New User Created"
-		}`
+		bstring, _ := json.Marshal(&b)
+		body := string(bstring)
+		log.Printf("Response body: %s\n>>>>>>\n", body)
 		response := "HTTP/1.1 201 Created\r\n" +
 			fmt.Sprintf("Content-Length: %d\r\n", len(body)) +
 			"Content-Type: application/json\r\n" +
@@ -52,15 +73,18 @@ func handle(conn net.Conn) {
 		_, _ = conn.Write([]byte(response))
 	}
 }
-/*
-		// response := "HTTP/1.1 200 OK\r\n" +
-		// 	"Content-Type: text/plain\r\n" +
-		// 	"Content-Length: 13\r\n" +
-		// 	"\r\n" +
-		// 	"Hello, World!"
-*/[]
-		// response := "HTTP/1.1 200 OK\r\n" +
-		// 	"Content-Type: text/plain\r\n" +
-		// 	"Content-Length: 13\r\n" +
-		// 	"\r\n" +
-		// 	"Hello, World!"
+
+// body := `{
+// "message": "New User Created"
+// }`
+// body = "{\"message\": \"New User Created\"}"
+// body = `
+// {
+// 	"message": "New user created",
+// 		"user": {
+// 			"id": 123,
+// 			"firstName": "Example",
+// 			"lastName": "Person",
+// 			"email": "bsmth@example.com"
+// 		}
+// }`
