@@ -17,7 +17,6 @@ var (
 
 type header struct {
 	requestHeader map[string]string
-	// representationHeader map[string]string
 }
 
 type body struct {
@@ -52,29 +51,12 @@ func NewRequest() *request {
 	return req
 }
 
-// func (r *request) updateState(in string) {
-// 	if r.parsingStatus == headerstatus && in == "" {
-// 		r.parsingStatus = bodyStatus
-// 		return
-// 	}
-// 	if lenStr, ok := r.header["Content-Length"]; ok {
-// 		lenInt, _ := strconv.Atoi(lenStr)
-// 		if r.parsingStatus == headerstatus && r.body.ContentLenght() == lenInt {
-// 			r.parsingStatus = bodyStatus
-// 		}
-// 	}
-// }
-
 func (r *request) parse(in string) {
-	// r.updateState(in)
-	// if r.parsingStatus == undefined {
-	// 	log.Print("error parsing")
-	// 	return
-	// }
-
 	switch r.parsingStatus {
 	case startlineStatus:
+		in = strings.TrimSpace(in)
 		sl := strings.Split(in, " ")
+		// fmt.Println(in, sl)
 		if len(sl) != 3 {
 			r.parsingStatus = undefined
 			return
@@ -85,6 +67,7 @@ func (r *request) parse(in string) {
 		r.parsingStatus = headerstatus
 		return
 	case headerstatus:
+		in = strings.TrimSpace(in)
 		if len(in) == 0 {
 			r.parsingStatus = bodyStatus
 			return
@@ -92,16 +75,18 @@ func (r *request) parse(in string) {
 		pair := strings.Split(in, ":")
 		r.header[pair[0]] = pair[1]
 	case bodyStatus:
+		r.body.Append(in)
 		if lenStr, ok := r.header["Content-Length"]; ok {
-			contentLength, _ := strconv.Atoi(lenStr)
+			contentLength, err := strconv.Atoi(strings.TrimSpace(lenStr))
+			if err != nil {
+				panic(err)
+			}
 			if r.body.ContentLenght() >= contentLength {
 				r.parsingStatus = completeStatus
 				return
 			}
-			r.body.Append(in)
 		} else if val, ok := r.header["Transfer-Encoding"]; ok && val == "chunked" {
 			log.Print("chunked data")
-			r.body.Append(in)
 		} else {
 			r.parsingStatus = completeStatus
 		}
