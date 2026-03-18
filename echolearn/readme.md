@@ -29,11 +29,22 @@ before moving to the next phase.
       the `*http.request` and wrapped `http.responsewriter`. also it has the `echo.echo`
       itself. this context is quite big, so to make it more performant, the `echo.context`
       can be fetched using `sync.pool` to reduce the reallocation.
-- [ ] The lifecycle of a `Context` — acquired, used, reset, returned to pool
+- [x] The lifecycle of a `Context` — acquired, used, reset, returned to pool
+      the context is acquired from the pool at the beginnin of the `ServeHTTP` method,
+      then it will be reset and populated with the request and resnpose, then find the
+      router. and the router will be executed to get the handler. then apply middleware,
+      and the registered handler that uses that `context`. after that, the context will be
+      return to the pool.
 - [ ] What `c.Param()`, `c.QueryParam()`, and `c.Bind()` each do under the hood
 - [ ] How `c.JSON()` writes the response — what headers it sets and in what order
 - [ ] What `DefaultHTTPErrorHandler` does and when it's called
 - [ ] How returning an `error` from a handler flows through to the error handler
+
+question:
+
+- why echo struct use context (not directly but through sync.pool) and context struct
+  also use echo struct?
+-
 
 ### Practice questions
 
