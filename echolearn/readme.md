@@ -35,9 +35,31 @@ before moving to the next phase.
       router. and the router will be executed to get the handler. then apply middleware,
       and the registered handler that uses that `context`. after that, the context will be
       return to the pool.
-- [ ] What `c.Param()`, `c.QueryParam()`, and `c.Bind()` each do under the hood
-- [ ] How `c.JSON()` writes the response — what headers it sets and in what order
-- [ ] What `DefaultHTTPErrorHandler` does and when it's called
+- [x] What `c.Param()`, `c.QueryParam()`, and `c.Bind()` each do under the hood
+      `c.queryparam` fetch the query param using the underlying `url.url` inside the
+      http request.
+      `c.param` uses their own param store and value which i still dont totaly understand
+      now.
+      c.bind is general method that bind the request body to a struct. it will check the
+      path param first, then query param, then parse the body based on the mime type (it
+      can be json, xml, multipart, etc).
+      actualy the bind uses the `defaultBinder` which is initialized when calling the
+      `echo.New()` method.
+- [x] How `c.JSON()` writes the response — what headers it sets and in what order
+      `c.json` writes the response by settting the content type to `application/json`
+      and then set the status code.
+      inside `context`, there is a `JSONSerializer` which is a echo's own interface for
+      json serialization. by default, it wraps the default `json.Marshal`.
+      using this serializer, the `c.JSON` serialize the data and write it to response body
+      through the `context.Response()` which is a wrapped `http.ResponseWriter`.
+- [x] What `DefaultHTTPErrorHandler` does and when it's called
+      echo has a field called `HTTPErrorHandler` which is a function for handling the error.
+      it is called when the registered handler return and error. this error will be handler
+      using something like this : `HTTPErrorHandler(err,c)`. inside it, it will check if
+      the error is echo's own sentinel error or not. if not, then it will converted to
+      500 internal server error. then the response will be written using `c.json()`.
+      So the `DefaultHTTPErrorHandler` is just a default implementation of this error handler,
+      which is created when calling `echo.New()`. you can replace it with your own
 - [ ] How returning an `error` from a handler flows through to the error handler
 
 question:
@@ -47,8 +69,6 @@ question:
 -
 
 ### Practice questions
-
-Answer each question in your own words. Then paste your answer in chat — I'll check it.
 
 **Q1.** If you call `c.JSON(200, data)` and then `c.JSON(400, err)` in the same handler,
 what happens? Why?
