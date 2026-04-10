@@ -60,12 +60,17 @@ before moving to the next phase.
       500 internal server error. then the response will be written using `c.json()`.
       So the `DefaultHTTPErrorHandler` is just a default implementation of this error handler,
       which is created when calling `echo.New()`. you can replace it with your own
-- [ ] How returning an `error` from a handler flows through to the error handler
+- [x] How returning an `error` from a handler flows through to the error handler
+      like explained above, there are globale handler for handling error which is default to
+      `DefaultHTTPErrorHandler`. firstly, the handler will check if the response is already
+      committed or not (via `c.json` or other method). if not, then it will check the error
+      type if it is echo's own error or not. if not, then return internal server error.
+      then call the `c.json` again to finalize
 
 question:
 
 - why echo struct use context (not directly but through sync.pool) and context struct
-  also use echo struct?
+  also use echo struct? it is like circular dependency
 -
 
 ### Practice questions
@@ -74,6 +79,12 @@ question:
 what happens? Why?
 
 > Your answer:
+> it will produce 2 response because the json encoder will just write the the message to the
+> response body without checking it. but it is different if for the status code. it will check
+> if it is committed or not. if it is commited, then it will just ignore the new status code.
+> basically calling `c.JON`will commit the response, so the second call will just write to the
+> body without changing the status code. so the final result is 200 with the body of
+> both `err` and `data`.
 
 ---
 
@@ -81,6 +92,9 @@ what happens? Why?
 per request?
 
 > Your answer:
+> it is because the echo context is quite big, so to make it more perfromat, it can reuse the
+> existing context from the pool. and to make it safe to use, it uses the `sync` package and
+> reset the context before using it
 
 ---
 
@@ -88,6 +102,10 @@ per request?
 vs returning a plain `errors.New("not found")` from a handler?
 
 > Your answer:
+> assume that we use default error handler, the first error will return as not found
+> because it is a `echo.HTTPErro`. so it will return as is.
+> but for the latter because it is just plain error and not `echo.HTTPError`, it will send as
+> internal server error so the error format will be the same
 
 ---
 
