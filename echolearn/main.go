@@ -14,26 +14,37 @@ func main() {
 	e := echo.New()
 	e.Use(middleware.RequestLogger())
 
-	// e.GET("/oke/mantap/wew", func(c echo.Context) error {
-	// 	var test string
-	// 	c.Param("some id ")
-	// 	c.QueryParam("query param")
-	// 	c.Bind(test)
-	// 	fmt.Println("here")
-	// 	// _ = c.JSON(http.StatusOK, "Hello, World!")
-	// 	// return c.JSON(400, errors.New("not error").Error())
-	// 	return c.String(http.StatusOK, "panjang")
-	// 	// return echo.NewHTTPError(400, "not found")
-	// })
-	e.GET("/oke", func(c echo.Context) error {
-		var test string
+	e.GET("a/:id/c", func(c echo.Context) error {
+		// var test string
 		c.Param("some id ")
 		c.QueryParam("query param")
-		c.Bind(test)
+		// c.Bind(test)
+		fmt.Println("with param")
+		// _ = c.JSON(http.StatusOK, "Hello, World!")
+		// return c.JSON(400, errors.New("not error").Error())
+		return c.String(http.StatusOK, "with param"+c.Param("id"))
+		// return echo.NewHTTPError(400, "not found")
+	})
+	e.GET("a/:data/c", func(c echo.Context) error {
+		// var test string
+		c.Param("some id ")
+		c.QueryParam("query param")
+		// c.Bind(test)
+		fmt.Println("with param")
+		// _ = c.JSON(http.StatusOK, "Hello, World!")
+		// return c.JSON(400, errors.New("not error").Error())
+		return c.String(http.StatusOK, "with data param: "+c.Param("id"))
+		// return echo.NewHTTPError(400, "not found")
+	})
+	e.GET("a/b/c", func(c echo.Context) error {
+		// var test string
+		c.Param("some id ")
+		c.QueryParam("query param")
+		// c.Bind(test)
 		fmt.Println("here")
 		// _ = c.JSON(http.StatusOK, "Hello, World!")
 		// return c.JSON(400, errors.New("not error").Error())
-		return c.String(http.StatusOK, "pendek")
+		return c.String(http.StatusOK, "without")
 		// return echo.NewHTTPError(400, "not found")
 	})
 

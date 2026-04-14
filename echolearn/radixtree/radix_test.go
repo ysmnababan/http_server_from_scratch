@@ -53,6 +53,36 @@ func TestAddAllMatch_NewRoot(t *testing.T) {
 	assert.Equal(t, 4, r.GetHandler("a/b/t"))
 }
 
+func TestAddAllMatch_Path(t *testing.T) {
+	t.Skip("need to change the children to a map")
+	r := NewRadixTree()
+
+	r.Add("a/:id/c", 1)
+	assert.Equal(t, 1, r.handler)
+	assert.Len(t, r.pattern, 3)
+	assert.Equal(t, "id", r.pattern[1].key)
+	assert.True(t, r.pattern[1].isDynamic)
+
+	r.Add("d/e/f", 2)
+	r.Add("a/b/c", 3)
+	ca, ok := r.getChild("a")
+	assert.True(t, ok)
+	assert.Equal(t, 3, ca.handler)
+	cd, ok := r.getChild("d")
+	assert.True(t, ok)
+	assert.Equal(t, 2, cd.handler)
+
+	// assert.Equal(t, 3, r.GetHandler("a/b/c"))
+	// assert.Equal(t, 1, r.GetHandler("a/123/c"))
+	// assert.Equal(t, "", ca.pattern)
+	// assert.Equal(t, 1, r.GetHandler("a/1/c"))
+	// assert.Equal(t, "1", r.pattern[1].param)
+	// assert.Equal(t, 1, r.GetHandler("a/t/c"))
+	// assert.Equal(t, "t", r.pattern[1].param)
+	// assert.Equal(t, 1, r.GetHandler("a/cw2/c"))
+	// assert.Equal(t, "cw2", r.pattern[1].param)
+}
+
 func TestAddAllMatch_UnmatchIntheMiddle(t *testing.T) {
 	r := NewRadixTree()
 

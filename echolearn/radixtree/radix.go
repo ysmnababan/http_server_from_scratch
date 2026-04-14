@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -11,6 +10,7 @@ import (
 type segment struct {
 	key       string
 	isDynamic bool
+	param     string
 }
 
 func isDynamic(s string) bool {
@@ -21,14 +21,31 @@ func isDynamic(s string) bool {
 }
 
 func NewSegment(s string) segment {
+	dynamic := isDynamic(s)
+	if dynamic {
+		runes := []rune(s)
+		s = string(runes[1:])
+	}
 	return segment{
 		key:       s,
-		isDynamic: isDynamic(s),
+		isDynamic: dynamic,
 	}
 }
 
 func (s *segment) isSameSegment(t segment) bool {
-	return s.key == t.key
+	return s.isDynamic || t.isDynamic || t.key == s.key
+}
+
+func (s *segment) assignIfSame(t segment) bool {
+	if s.key == t.key {
+		return true
+	}
+	if s.isDynamic {
+		s.param = t.key
+		return true
+	}
+
+	return false
 }
 
 func getSegment(path string) []segment {
@@ -63,7 +80,6 @@ func (r *RadixTree) getChild(key string) (*RadixTree, bool) {
 }
 
 func (r *RadixTree) GetHandler(path string) int {
-	fmt.Println(path)
 	segments := getSegment(path)
 	if len(r.pattern) == 0 {
 		first := segments[0]
@@ -71,13 +87,12 @@ func (r *RadixTree) GetHandler(path string) int {
 		if !ok {
 			return defaultHandler
 		}
-		fmt.Println("here")
 		return node.GetHandler(path)
 	}
 	minLen := min(len(r.pattern), len(segments))
 	i := 0
 	for i < minLen {
-		if !r.pattern[i].isSameSegment(segments[i]) {
+		if !r.pattern[i].assignIfSame(segments[i]) {
 			return defaultHandler
 		}
 		i++

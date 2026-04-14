@@ -115,10 +115,35 @@ vs returning a plain `errors.New("not found")` from a handler?
 
 ### Concepts
 
-- [ ] What a radix tree is and why echo uses it instead of a plain map
-- [ ] How route parameters like `:id` are stored and extracted from the tree
-- [ ] How wildcard routes `*` differ from param routes `:param` in the tree
-- [ ] What happens when two routes conflict — how echo resolves priority
+- [x] What a radix tree is and why echo uses it instead of a plain map
+      _Ans_: radix tree is a trie-based data structure that instead of storing a single char or
+      'data' inside a node, it purposefuly store the common prefix from a set of data to
+      reduce memory and increase time of access. instead of searching all the node -- which can
+      costly -- the complexity can be reduced to log(m) where `m` is the length of a string.
+      echo uses it because the way the request path is constructed. it consist of dynamic key
+      like `:id` that can't be easily stored in key-value data. also, radix tree can improve
+      both performance and memory especially with server that has a lot of endpoints.
+- [x] How route parameters like `:id` are stored and extracted from the tree
+      _Ans_: `:id` are stored as `pnames`, that will be added when adding the handler along with
+      the handler itself. both stored in struct called `routemethod`. and the actual value for
+      the `:id` itself will be populated when the endpoint is being hit. the server will eventually
+      run the `ServeHTTP` method which call the method `router#Find`. this method will find the
+      handler based on the path(and method). at the same time, this method will populate the
+      `context` from pool and add the `pnames` and `pvalues` pair. if the handler later on want to
+      get the param, it can quickly search from `pnames` and `pvalues` inside the `context`.
+- [x] How wildcard routes `*` differ from param routes `:param` in the tree
+      _Ans_: Basically wildcard routes is route where the path after the `*` symbol will be redirected
+      to the registered handler on the `*` node. if the wildcard is found then it will go to
+      the handler even if there is remaining path. the behaviour is slightly different with
+      the `:param` because it can still have the next fragment after the `:param` symbol.
+      When registered, param can create up to 3 new nodes, 1 for path before `:`, 1 for path
+      until the `:` symbol, and the rest is for the path after the `:`.
+      but different with the wildcard routes, where it only create 2 nodes with without the
+      preceding path.
+- [x] What happens when two routes conflict — how echo resolves priority
+      _Ans_: when registering the same route twice, it will rewrite the handler into the latest
+      handler. when trying to get the handler (when request is received), it will find the
+      exact match first.
 - [ ] How `e.Group()` works and what it actually stores vs a standalone route
 - [ ] How echo handles `405 Method Not Allowed` vs `404 Not Found` — what triggers each
 
