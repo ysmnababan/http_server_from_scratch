@@ -144,8 +144,14 @@ vs returning a plain `errors.New("not found")` from a handler?
       _Ans_: when registering the same route twice, it will rewrite the handler into the latest
       handler. when trying to get the handler (when request is received), it will find the
       exact match first.
-- [ ] How `e.Group()` works and what it actually stores vs a standalone route
-- [ ] How echo handles `405 Method Not Allowed` vs `404 Not Found` — what triggers each
+- [x] How `e.Group()` works and what it actually stores vs a standalone route
+      _Ans_: `e.Group()` basically creates a new struct called `group` which is a wrapper around
+      the `e` itself with added prefix (and middleware). the returned `group` has its own register
+      http method. inside it, it will call `echo.add` but the path will be enriched with the
+      group prefix.
+- [x] How echo handles `405 Method Not Allowed` vs `404 Not Found` — what triggers each
+      _Ans_: method not allowed is sent whenever there are matching url but the method is not
+      match. but the `not found` is sent when there is no matching url.
 
 ### Practice questions
 
@@ -153,6 +159,15 @@ vs returning a plain `errors.New("not found")` from a handler?
 Which route matches and why?
 
 > Your answer:
+> these paths will eventually introduce 3 nodes with something like this :
+
+```
+/user/  => :
+        => me
+```
+
+so when the request `/users/me` comes, it will use the `m` as a label to find the
+`me` node. so it will find the `/users/me` first because it has identical match.
 
 ---
 
@@ -160,6 +175,12 @@ Which route matches and why?
 `e.GET("/a/:param")` in the radix tree?
 
 > Your answer:
+> `staticKind` will likely combined in one single node if possible because echo uses
+> LCP as their algorithm. so as long as no other path that has common prefix, the
+> the path will be stored in single node. but this is different with the `:param`.
+> because it will automatically created at least 2 nodes where the lcp is started
+> before the `:` symbol. so `:` will be the new label for the root to use whenever
+> it wants to check its children
 
 ---
 
@@ -167,6 +188,7 @@ Which route matches and why?
 return 404 or 405? Trace exactly which code produces that response.
 
 > Your answer:
+> The router will return 405 because there is matching path but not with the method
 
 ---
 

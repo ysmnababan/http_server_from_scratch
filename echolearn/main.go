@@ -13,7 +13,10 @@ func main() {
 	// http.ListenAndServe(":8080", nil)
 	e := echo.New()
 	e.Use(middleware.RequestLogger())
-
+	group := e.Group("groupname")
+	group.GET("insidegroup", func(c echo.Context) error {
+		return nil
+	})
 	e.GET("a/:id/c", func(c echo.Context) error {
 		// var test string
 		c.Param("some id ")
