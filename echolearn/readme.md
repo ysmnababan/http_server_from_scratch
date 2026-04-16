@@ -119,7 +119,7 @@ vs returning a plain `errors.New("not found")` from a handler?
       _Ans_: radix tree is a trie-based data structure that instead of storing a single char or
       'data' inside a node, it purposefuly store the common prefix from a set of data to
       reduce memory and increase time of access. instead of searching all the node -- which can
-      costly -- the complexity can be reduced to log(m) where `m` is the length of a string.
+      costly -- the complexity can be reduced to O(m) where `m` is the length of a string.
       echo uses it because the way the request path is constructed. it consist of dynamic key
       like `:id` that can't be easily stored in key-value data. also, radix tree can improve
       both performance and memory especially with server that has a lot of endpoints.
@@ -168,6 +168,8 @@ Which route matches and why?
 
 so when the request `/users/me` comes, it will use the `m` as a label to find the
 `me` node. so it will find the `/users/me` first because it has identical match.
+the node kind priority is `staticKind` > `paramKind` > `catchAllKind`.
+so it will find the static node first before
 
 ---
 
@@ -198,9 +200,36 @@ return 404 or 405? Trace exactly which code produces that response.
 
 ### Concepts
 
-- [ ] How `MiddlewareFunc` wraps `HandlerFunc` — the exact type signature and what it means
-- [ ] How `e.Use()` middleware differs from group-level and route-level middleware in execution order
-- [ ] What happens if a middleware does not call `next(c)`
+- [x] How `MiddlewareFunc` wraps `HandlerFunc` — the exact type signature and what it means
+      _Ans_: `MiddlewareFunc` is function who receives a `HandlerFunc` and return a `HandlerFunc`.
+      it means that the function `next` can be executed after some process and that's is the
+      point of using middleware. techically speaking, it can also handle after the `next`
+      execution. so it basically means that the middleware will act like a onion wrapper
+      that wrap a particular handler with before and after execution.
+      it look like this
+
+  ```
+    func Middleware(next HandlerFunc) HandlerFunc {
+      return func(c echo.Context) error {
+        // do something here
+        return next(c)
+      }
+    }
+
+    mw1
+     mw2
+      handler
+     mw2
+    mw1
+  ```
+
+- [x] How `e.Use()` middleware differs from group-level and route-level middleware in execution order
+      _Ans_: `e.Use()` middleware is a global middleware, so it will applied to all the handler.
+      but the group level only applied to endpoint which belong to the group and the
+      route-level middlware will only applied to a specific endpoint
+- [x] What happens if a middleware does not call `next(c)`
+      It will not execute the handler inside it. meaning that the output for and endpoint will likely
+      be empty, or as if the handler is called but the function is empty.
 - [ ] How echo's `Recover` middleware catches panics — what it does with the stack trace
 - [ ] How `Logger` middleware captures response status code — why it needs to wrap the `ResponseWriter`
 

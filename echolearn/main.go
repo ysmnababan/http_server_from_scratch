@@ -5,14 +5,35 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
 )
+
+func mw1(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		fmt.Println("before mw1")
+		err := next(c)
+		// fmt.Println("after mw1")
+		return err
+	}
+}
+
+func mw2(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		fmt.Println("before mw2")
+		return nil
+		err := next(c)
+		// fmt.Println("after mw2")
+
+		return err
+	}
+}
 
 func main() {
 	// http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {})
 	// http.ListenAndServe(":8080", nil)
 	e := echo.New()
-	e.Use(middleware.RequestLogger())
+	// e.Use(middleware.RequestLogger())
+	e.Use(mw1, mw2)
+	// e.Use(mw2)
 	group := e.Group("groupname")
 	group.GET("insidegroup", func(c echo.Context) error {
 		return nil
