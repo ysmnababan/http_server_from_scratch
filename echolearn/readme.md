@@ -228,10 +228,20 @@ return 404 or 405? Trace exactly which code produces that response.
       but the group level only applied to endpoint which belong to the group and the
       route-level middlware will only applied to a specific endpoint
 - [x] What happens if a middleware does not call `next(c)`
-      It will not execute the handler inside it. meaning that the output for and endpoint will likely
+      _Ans_:It will not execute the handler inside it. meaning that the output for and endpoint will likely
       be empty, or as if the handler is called but the function is empty.
-- [ ] How echo's `Recover` middleware catches panics — what it does with the stack trace
-- [ ] How `Logger` middleware captures response status code — why it needs to wrap the `ResponseWriter`
+- [x] How echo's `Recover` middleware catches panics — what it does with the stack trace
+      _Ans_: recover middleware has a defer function inside it where it catch all the panic from the
+      `next(c)` execution result. it will check the return type of the `panic` and also show the error
+      stack. The `Recover` middleware also has the `logerrorfunc` which can be added using the config.
+      The stack can be displayed or not depend on the configuration too. But it has its own default
+      configuration.
+- [x] How `Logger` middleware captures response status code — why it needs to wrap the `ResponseWriter`
+      The logger capture response status code by accessing the c.response(). There is no wrapping the
+      response writer, but the `c.Response()` is a wrapper around the `http.ResponseWriter` that also
+      has a field for status code. so when the handler write to the response, it will update the
+      status code in the `c.Response()`. so the logger can access this field after calling
+      `next(c)` to get the final status code.
 
 ### Practice questions
 
@@ -239,6 +249,9 @@ return 404 or 405? Trace exactly which code produces that response.
 the exact execution order? Does the order of `e.Use()` calls matter?
 
 > Your answer:
+> the execution order is A>B>C. The order of e.Use calls matter because it will apply
+> the middleware by wrapping the handler from the last to the first. so if the request come, it will
+> execute A first because it is the most outer wrapper.
 
 ---
 
@@ -246,8 +259,12 @@ the exact execution order? Does the order of `e.Use()` calls matter?
 `next(c)`? What problem does this create and how does echo solve it?
 
 > Your answer:
-
----
+> it can read the status code after calling `next(c)`, but the problem is that the status code is not
+> set until the handler write to the response. so if the handler just return without writing to the response,
+> then the status code will be 0. echo solve this by wrapping the `http.ResponseWriter` with its own `Response`
+> struct that has a field for status code. so whenever the handler write to the response, it will update the
+> status code in the `Response` struct. so the logger can access this field after calling `next(c)` to
+> get the final status code
 
 ## Phase 4 — Binder, renderer & extensibility
 

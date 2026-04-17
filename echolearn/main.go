@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 func mw1(next echo.HandlerFunc) echo.HandlerFunc {
@@ -19,21 +20,49 @@ func mw1(next echo.HandlerFunc) echo.HandlerFunc {
 func mw2(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		fmt.Println("before mw2")
-		return nil
 		err := next(c)
-		// fmt.Println("after mw2")
+		fmt.Println("after mw2")
 
 		return err
 	}
+}
+
+func fA() {
+	defer func() {
+		fmt.Println("A: before recover")
+		r := recover()
+		if r != nil {
+			fmt.Println(r)
+		}
+		fmt.Println("after recover")
+	}()
+	fmt.Println("A")
+	fB()
+}
+
+func fB() {
+	fmt.Println("B")
+	fC()
+	fmt.Println("b after")
+}
+
+func fC() {
+	fmt.Println("C")
+	panic("panic in C")
+	fmt.Println("after panic")
+}
+
+func notmain() {
+	fA()
 }
 
 func main() {
 	// http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {})
 	// http.ListenAndServe(":8080", nil)
 	e := echo.New()
-	// e.Use(middleware.RequestLogger())
+	e.Use(middleware.RequestLogger())
+	e.Use(middleware.Logger())
 	e.Use(mw1, mw2)
-	// e.Use(mw2)
 	group := e.Group("groupname")
 	group.GET("insidegroup", func(c echo.Context) error {
 		return nil
