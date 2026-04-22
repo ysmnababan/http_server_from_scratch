@@ -272,11 +272,41 @@ the exact execution order? Does the order of `e.Use()` calls matter?
 
 ### Concepts
 
-- [ ] How `c.Bind()` decides whether to decode JSON, form, or query params — what it checks and in what order
-- [ ] How echo uses Go reflection in its default binder to populate struct fields
-- [ ] How to replace the default binder with a custom one and when you'd want to
-- [ ] What `Validator` is in echo and why echo doesn't ship a default one
-- [ ] How `c.Render()` works and what interface a custom renderer must implement
+- [x] How `c.Bind()` decides whether to decode JSON, form, or query params — what it checks and in what order
+      _Ans_: `c.Bind()` is done in following order: pathparam, queryparam, body. it will checks the structs'
+      tag to see if it has specific keyword like `param` or `query`. for example if there are both tag
+      `param:"id"` and `query:"id"` on the struct field and the request both have that id in different value,
+      any value of param will be overwritten by the query. but the binding query only applied to these methods
+      like `get`, `head` and `delete`. at the end, it will populate by bind the body to the struct.
+      this `bodybind` process will check the MIME type. if it is json, then it will deserialize the body. this
+      method also cover the other MIME type like `application/xml`, `text/xml`, `application/form`, and
+      `multipart/form`.
+- [x] How echo uses Go reflection in its default binder to populate struct fields
+      _Ans_: because it is impossible to know the actual structs would be. So the reflection will help us
+      to `inspect` what is the real value and its corresponding types and even the field's tag. This is very
+      important to be able to map the actual runtime data and type,
+- [x] How to replace the default binder with a custom one and when you'd want to
+      _Ans_: binder is a interface that have a method :
+      `Bind(i interface{}, c Context) error`
+      So to create custom one, you can create any struct that implement this. or you can even wrap the default
+      binder and add some of your implementation after calling the default binder. Using custom binder can be
+      useful when you have a specific need that can't be covered by the default one. maybe adding extra validation
+      or any business logic right after the binding process.
+- [x] What `Validator` is in echo and why echo doesn't ship a default one
+      _Ans_: `Validator` is an interface that has method:
+      `Validate(i interface{}) error`
+      This is usually called after calling the `Bind` method to validate the data. echo doesn't have default one
+      so we have to assign another validator to by `e.Validator = &customvalidator{}`. This can be approach by
+      creating our own validator from scratch, or just using commonly used third-party libraries like `go-playground`.
+      the reason why echo doesn't ship a default one is because whether the data is considered valid or not, it is
+      not really the concern of the framework anymore because the framework is mainly used for managing the
+      communication problem or in this case the HTTP protocol. the validity of the data is more of like the
+      business side rather than the communication problem.
+- [x] How `c.Render()` works and what interface a custom renderer must implement
+      _Ans_: `c.Render()` is a method that calls the echo `Renderer` interface. Internally, it uses the golang
+      `template` library to render a specific template. Template can be registered by assigning the `Renderer`
+      field to our custom renderer. but it must implement the `Renderer` interface which has this method:
+      `Render(io.Writer, string, interface{}, Context) error`
 
 ### Practice questions
 
@@ -284,13 +314,19 @@ the exact execution order? Does the order of `e.Use()` calls matter?
 What does `c.Bind()` populate and what does it ignore?
 
 > Your answer:
-
----
+> By default, `c.Bind()` will binds by the following order: `path`, `query` and then `body`. so it will populate
+> these three instances. But, if it has query param, it will only be populate the query if the methods are
+> `GET/DELETE/HEAD`. But because the `bindbody` will eventually be executed, there are possibility that the
+> query param will be overwritten.
 
 **Q10.** Why does echo not ship with a built-in validator despite shipping with a
 built-in binder?
 
 > Your answer:
+> the reason why echo doesn't ship a default one is because whether the data is considered valid or not, it is
+> not really the concern of the framework anymore because the framework is mainly used for managing the
+> communication problem or in this case the HTTP protocol. the validity of the data is more of like the
+> business side rather than the communication problem.
 
 ---
 

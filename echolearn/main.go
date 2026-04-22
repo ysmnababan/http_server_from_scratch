@@ -73,6 +73,7 @@ func main() {
 		c.QueryParam("query param")
 		// c.Bind(test)
 		fmt.Println("with param")
+		c.Validate(10)
 		// _ = c.JSON(http.StatusOK, "Hello, World!")
 		// return c.JSON(400, errors.New("not error").Error())
 		return c.String(http.StatusOK, "with param"+c.Param("id"))
